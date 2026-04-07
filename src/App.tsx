@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/NavBar'
+import ProtectedRoute from './components/ProtectedRoute'
+import Login from './pages/Login'
 import Home from './pages/Home'
 import Players from './pages/Players'
 import Draw from './pages/Draw'
@@ -11,15 +13,33 @@ import Admin from './pages/Admin'
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/players" element={<Players />} />
-        <Route path="/draw" element={<Draw />} />
-        <Route path="/1v1" element={<Bracket1v1 />} />
-        <Route path="/2v2" element={<League2v2 />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/admin" element={<Admin />} />
+        {/* Pública */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Protegidas */}
+        <Route path="/*" element={
+          <ProtectedRoute>
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/players" element={<Players />} />
+              <Route path="/1v1" element={<Bracket1v1 />} />
+              <Route path="/2v2" element={<League2v2 />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/draw" element={
+                <ProtectedRoute adminOnly>
+                  <Draw />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute adminOnly>
+                  <Admin />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   )

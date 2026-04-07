@@ -1,6 +1,6 @@
-# 🏆 FifaCup San Tanã
+# 🏆 FifaCup Santana
 
-Sistema web para gerenciar o **FifaCup San Tanã** — campeonato presencial de FIFA 1v1 e 2v2 da comunidade de Sousas. Conta com sorteio de grupos, tabelas em tempo real, chaveamento de mata-mata e painel administrativo.
+Sistema web para gerenciar o **FifaCup Santana** — campeonato presencial de FIFA 1v1 e 2v2 da comunidade de Sousas. Conta com sorteio de grupos, tabelas em tempo real, chaveamento de mata-mata e painel administrativo.
 
 ---
 
@@ -22,7 +22,7 @@ Sistema web para gerenciar o **FifaCup San Tanã** — campeonato presencial de 
 
 ## Visão Geral
 
-O FifaCup San Tanã foi criado para organizar o campeonato presencial de FIFA da comunidade de Sousas, com 12 a 14 participantes. O sistema gerencia dois torneios paralelos e independentes:
+O FifaCup Santana foi criado para organizar o campeonato presencial de FIFA da comunidade de Sousas, com 12 a 14 participantes. O sistema gerencia dois torneios paralelos e independentes:
 
 - **1v1** — Cada jogador compete individualmente
 - **2v2** — Jogadores formam duplas e competem em equipe
@@ -34,6 +34,7 @@ O organizador (admin) controla o sistema via painel protegido por senha. Os joga
 ## Funcionalidades
 
 ### Administrador
+
 - Cadastrar jogadores e definir suas credenciais de acesso (e-mail + senha temporária)
 - Montar duplas para o torneio 2v2
 - Realizar o sorteio dos grupos (1v1) e confrontos (2v2)
@@ -41,12 +42,14 @@ O organizador (admin) controla o sistema via painel protegido por senha. Os joga
 - Gerar automaticamente o mata-mata após a fase de grupos
 
 ### Jogador
+
 - Fazer login com e-mail e senha fornecidos pelo admin
 - Trocar a própria senha após o primeiro acesso
 - Personalizar o perfil: username, foto de avatar e time do FIFA escolhido
 - Visualizar tabelas, classificações e chaveamento em tempo real
 
 ### Sistema
+
 - Atualização em tempo real via Supabase Realtime (sem necessidade de recarregar a página)
 - Classificação automática por pontos, saldo de gols e gols marcados
 - Geração automática do bracket de mata-mata com base na fase de grupos
@@ -59,12 +62,14 @@ O organizador (admin) controla o sistema via painel protegido por senha. Os joga
 ### 1v1 — Fase de Grupos + Mata-mata
 
 **Fase de Grupos**
+
 - 12–14 jogadores divididos em 4 grupos de 3 (ou ajustado conforme o número final)
 - Dentro de cada grupo, todos se enfrentam (round-robin)
 - Classificação por: pontos → saldo de gols → gols marcados
 - Os 2 melhores de cada grupo avançam
 
 **Mata-mata**
+
 - 8 classificados se enfrentam em eliminação simples
 - Quartas de final → Semifinais → Final
 - Em caso de empate no placar, define-se na disputa de pênaltis
@@ -79,15 +84,15 @@ O organizador (admin) controla o sistema via painel protegido por senha. Os joga
 
 ## Stack Tecnológica
 
-| Camada | Tecnologia |
-|--------|------------|
-| Frontend | React 18 + TypeScript + Vite |
-| Estilização | Tailwind CSS |
-| Banco de dados | Supabase (PostgreSQL) |
-| Autenticação | Supabase Auth |
-| Armazenamento de imagens | Supabase Storage |
-| Tempo real | Supabase Realtime |
-| Hospedagem | Vercel |
+| Camada                   | Tecnologia                   |
+| ------------------------ | ---------------------------- |
+| Frontend                 | React 18 + TypeScript + Vite |
+| Estilização              | Tailwind CSS                 |
+| Banco de dados           | Supabase (PostgreSQL)        |
+| Autenticação             | Supabase Auth                |
+| Armazenamento de imagens | Supabase Storage             |
+| Tempo real               | Supabase Realtime            |
+| Hospedagem               | Vercel                       |
 
 ---
 
@@ -116,6 +121,7 @@ O organizador (admin) controla o sistema via painel protegido por senha. Os joga
 ## Schema do Banco de Dados
 
 ### `profiles`
+
 Estende o `auth.users` do Supabase. Criado automaticamente via trigger ao cadastrar um usuário.
 
 ```sql
@@ -130,6 +136,7 @@ profiles (
 ```
 
 ### `groups`
+
 Grupos da fase de grupos do 1v1.
 
 ```sql
@@ -140,6 +147,7 @@ groups (
 ```
 
 ### `group_members`
+
 Relacionamento entre jogadores e grupos.
 
 ```sql
@@ -151,6 +159,7 @@ group_members (
 ```
 
 ### `duos`
+
 Duplas formadas para o torneio 2v2.
 
 ```sql
@@ -164,6 +173,7 @@ duos (
 ```
 
 ### `matches`
+
 Partidas de ambas as modalidades.
 
 ```sql
@@ -256,10 +266,10 @@ Admin cria jogador
 
 ### Roles
 
-| Role | Permissões |
-|------|------------|
-| `admin` | Criar jogadores, sortear grupos, lançar resultados, gerenciar torneio |
-| `player` | Visualizar tabelas e chaveamento, editar próprio perfil |
+| Role     | Permissões                                                            |
+| -------- | --------------------------------------------------------------------- |
+| `admin`  | Criar jogadores, sortear grupos, lançar resultados, gerenciar torneio |
+| `player` | Visualizar tabelas e chaveamento, editar próprio perfil               |
 
 ### Personalização do perfil (jogador)
 
@@ -273,6 +283,7 @@ Admin cria jogador
 ## Plano de Desenvolvimento
 
 ### Fase 1 — Setup e Base
+
 - [x] Criar projeto com Vite + React + TypeScript
 - [x] Configurar Tailwind CSS
 - [x] Criar projeto no Supabase e rodar o schema SQL
@@ -280,29 +291,34 @@ Admin cria jogador
 - [x] Configurar Supabase Auth e trigger de criação de perfil
 
 ### Fase 2 — Admin e Jogadores
+
 - [x] Página de login do admin
 - [x] Painel admin: cadastrar jogadores (nome + e-mail + senha temporária)
 - [x] Página de perfil do jogador (username, avatar, time, troca de senha)
 - [x] Upload de avatar para o Supabase Storage
 
 ### Fase 3 — Sorteio
+
 - [x] Lógica de sorteio dos grupos 1v1 (`draw.ts`)
 - [x] Lógica de formação das duplas 2v2
 - [x] Geração automática das partidas da fase de grupos e liga
 - [x] Página de visualização do sorteio
 
 ### Fase 4 — Tabelas e Resultados
+
 - [x] Tabela de grupos 1v1 com cálculo de pontos
 - [x] Tabela de pontos corridos 2v2
 - [x] Supabase Realtime para atualização ao vivo
 - [x] Modal de lançamento de resultado (admin)
 
 ### Fase 5 — Mata-mata
+
 - [ ] Geração automática do bracket após fase de grupos
 - [ ] Componente visual do chaveamento (`KnockoutBracket.tsx`)
 - [ ] Avanço automático de classificados ao inserir resultado
 
 ### Fase 6 — Polimento e Deploy
+
 - [ ] Página Home com próximas partidas e resultados recentes
 - [ ] Responsividade mobile
 - [ ] Configurar projeto na Vercel
@@ -373,6 +389,7 @@ O projeto é hospedado na **Vercel**.
 ### Configuração do Supabase para produção
 
 Em **Supabase → Authentication → URL Configuration**, adicione:
+
 - Site URL: `https://seu-projeto.vercel.app`
 - Redirect URLs: `https://seu-projeto.vercel.app/**`
 
@@ -384,15 +401,15 @@ O projeto segue o padrão [Conventional Commits](https://www.conventionalcommits
 
 ### Tipos utilizados
 
-| Tipo | Quando usar |
-|------|-------------|
-| `feat` | Nova funcionalidade |
-| `fix` | Correção de bug |
-| `style` | Alterações visuais/CSS sem impacto na lógica |
-| `refactor` | Refatoração de código sem nova feature ou fix |
-| `docs` | Alterações em documentação (README, comentários) |
-| `chore` | Configurações, dependências, arquivos de ambiente |
-| `test` | Adição ou ajuste de testes |
+| Tipo       | Quando usar                                       |
+| ---------- | ------------------------------------------------- |
+| `feat`     | Nova funcionalidade                               |
+| `fix`      | Correção de bug                                   |
+| `style`    | Alterações visuais/CSS sem impacto na lógica      |
+| `refactor` | Refatoração de código sem nova feature ou fix     |
+| `docs`     | Alterações em documentação (README, comentários)  |
+| `chore`    | Configurações, dependências, arquivos de ambiente |
+| `test`     | Adição ou ajuste de testes                        |
 
 ---
 

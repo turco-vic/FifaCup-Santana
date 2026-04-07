@@ -32,7 +32,7 @@ export default function Admin() {
                     <div className="flex flex-col items-center mb-8">
                         <img src="/favicon.svg" alt="Logo" className="w-16 h-16 mb-4" />
                         <h1 className="text-3xl font-bold" style={{ color: 'var(--color-gold)' }}>
-                            FifaCup San Tanã
+                            FifaCup Santana
                         </h1>
                         <p className="text-white/60 text-sm mt-1">Painel Administrativo</p>
                     </div>

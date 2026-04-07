@@ -6,13 +6,93 @@ import { useStandings } from '../hooks/useStandings'
 import GroupTable from '../components/GroupTable'
 import ScoreModal from '../components/ScoreModal'
 import type { Profile, Match } from '../types'
-
-const GROUP_NAMES = ['Grupo A', 'Grupo B', 'Grupo C', 'Grupo D']
+import { Pencil, Plus } from 'lucide-react'
 
 type GroupData = {
     id: string
     name: string
     players: Profile[]
+}
+
+function GroupSection({
+    group,
+    matches,
+    isAdmin,
+    onSelectMatch,
+}: {
+    group: GroupData
+    matches: Match[]
+    isAdmin: boolean
+    onSelectMatch: (match: Match) => void
+}) {
+    const groupMatches = matches.filter(
+        m =>
+            m.stage === 'groups' &&
+            group.players.map(p => p.id).includes(m.home_id) &&
+            group.players.map(p => p.id).includes(m.away_id)
+    )
+    const standings = useStandings(group.players, groupMatches)
+
+    function getPlayerName(id: string) {
+        const p = group.players.find(p => p.id === id)
+        return p?.username ?? p?.name ?? 'Sem nome'
+    }
+
+    return (
+        <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+            <div
+                className="px-4 py-3 border-b border-white/10"
+                style={{ backgroundColor: 'rgba(201,153,42,0.1)' }}
+            >
+                <h2 className="font-bold" style={{ color: 'var(--color-gold)' }}>
+                    {group.name}
+                </h2>
+            </div>
+
+            <div className="px-2 py-2">
+                <GroupTable standings={standings} qualifiers={2} />
+            </div>
+
+            <div className="border-t border-white/10 px-4 py-3">
+                <p className="text-white/40 text-xs mb-3 uppercase tracking-wider">Partidas</p>
+                <div className="flex flex-col gap-2">
+                    {groupMatches.map(match => (
+                        <div
+                            key={match.id}
+                            className="flex items-center gap-2 py-2 border-b border-white/5 last:border-0"
+                        >
+                            <span className="flex-1 text-right text-sm text-white truncate">
+                                {getPlayerName(match.home_id)}
+                            </span>
+
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                                {match.played ? (
+                                    <span className="font-bold text-white px-2">
+                                        {match.home_score} × {match.away_score}
+                                    </span>
+                                ) : (
+                                    <span className="text-white/30 px-2 text-sm">vs</span>
+                                )}
+                            </div>
+
+                            <span className="flex-1 text-left text-sm text-white truncate">
+                                {getPlayerName(match.away_id)}
+                            </span>
+
+                            {isAdmin && (
+                                <button
+                                    onClick={() => onSelectMatch(match)}
+                                    className="p-1.5 rounded border border-white/20 text-white/50 hover:text-white hover:border-white/40 transition flex-shrink-0"
+                                >
+                                    {match.played ? <Pencil size={12} /> : <Plus size={12} />}
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default function Bracket1v1() {
@@ -23,42 +103,35 @@ export default function Bracket1v1() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
 
     useEffect(() => {
-        fetchGroups()
-    }, [])
+        async function fetchGroups() {
+            const { data: groupsData } = await supabase
+                .from('groups')
+                .select('id, name')
+                .order('name')
 
-    async function fetchGroups() {
-        const { data: groupsData } = await supabase
-            .from('groups')
-            .select('id, name')
-            .order('name')
+            if (!groupsData || groupsData.length === 0) {
+                setLoading(false)
+                return
+            }
 
-        if (!groupsData || groupsData.length === 0) {
+            const { data: members } = await supabase
+                .from('group_members')
+                .select('group_id, profile:player_id(id, name, username, avatar_url, team_name, role, created_at)')
+
+            const grouped: GroupData[] = groupsData.map(g => ({
+                id: g.id,
+                name: g.name,
+                players: (members ?? [])
+                    .filter(m => m.group_id === g.id)
+                    .map(m => m.profile as unknown as Profile),
+            }))
+
+            setGroups(grouped)
             setLoading(false)
-            return
         }
 
-        const { data: members } = await supabase
-            .from('group_members')
-            .select('group_id, profile:player_id(id, name, username, avatar_url, team_name, role, created_at)')
-
-        const grouped: GroupData[] = groupsData.map(g => ({
-            id: g.id,
-            name: g.name,
-            players: (members ?? [])
-                .filter(m => m.group_id === g.id)
-                .map(m => m.profile as unknown as Profile),
-        }))
-
-        setGroups(grouped)
-        setLoading(false)
-    }
-
-    function getGroupMatches(groupPlayers: Profile[]) {
-        const ids = groupPlayers.map(p => p.id)
-        return matches.filter(
-            m => m.stage === 'groups' && ids.includes(m.home_id) && ids.includes(m.away_id)
-        )
-    }
+        fetchGroups()
+    }, [])
 
     function getPlayerName(id: string) {
         for (const g of groups) {
@@ -95,69 +168,15 @@ export default function Bracket1v1() {
                 </h1>
 
                 <div className="flex flex-col gap-6">
-                    {groups.map((group, gi) => {
-                        const groupMatches = getGroupMatches(group.players)
-                        const standings = useStandings(group.players, groupMatches)
-
-                        return (
-                            <div key={group.id} className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-
-                                {/* Header do grupo */}
-                                <div className="px-4 py-3 border-b border-white/10"
-                                    style={{ backgroundColor: 'rgba(201,153,42,0.1)' }}>
-                                    <h2 className="font-bold" style={{ color: 'var(--color-gold)' }}>
-                                        {group.name}
-                                    </h2>
-                                </div>
-
-                                {/* Tabela de classificação */}
-                                <div className="px-2 py-2">
-                                    <GroupTable standings={standings} qualifiers={2} />
-                                </div>
-
-                                {/* Partidas do grupo */}
-                                <div className="border-t border-white/10 px-4 py-3">
-                                    <p className="text-white/40 text-xs mb-3 uppercase tracking-wider">Partidas</p>
-                                    <div className="flex flex-col gap-2">
-                                        {groupMatches.map(match => (
-                                            <div
-                                                key={match.id}
-                                                className="flex items-center gap-2 py-2 border-b border-white/5 last:border-0"
-                                            >
-                                                <span className="flex-1 text-right text-sm text-white truncate">
-                                                    {getPlayerName(match.home_id)}
-                                                </span>
-
-                                                <div className="flex items-center gap-1 flex-shrink-0">
-                                                    {match.played ? (
-                                                        <span className="font-bold text-white px-2">
-                                                            {match.home_score} × {match.away_score}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-white/30 px-2 text-sm">vs</span>
-                                                    )}
-                                                </div>
-
-                                                <span className="flex-1 text-left text-sm text-white truncate">
-                                                    {getPlayerName(match.away_id)}
-                                                </span>
-
-                                                {isAdmin && (
-                                                    <button
-                                                        onClick={() => setSelectedMatch(match)}
-                                                        className="text-xs px-2 py-1 rounded border border-white/20 text-white/50 hover:text-white hover:border-white/40 transition flex-shrink-0"
-                                                    >
-                                                        {match.played ? '✏️' : '+ Placar'}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                            </div>
-                        )
-                    })}
+                    {groups.map(group => (
+                        <GroupSection
+                            key={group.id}
+                            group={group}
+                            matches={matches}
+                            isAdmin={isAdmin}
+                            onSelectMatch={setSelectedMatch}
+                        />
+                    ))}
                 </div>
 
             </div>
