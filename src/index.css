@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --color-green:  #0D5C4A;
-  --color-gold:   #C9992A;
-  --color-white:  #FFFFFF;
+  --color-green: #0D5C4A;
+  --color-gold: #C9992A;
+  --color-white: #FFFFFF;
 }
 
 body {
