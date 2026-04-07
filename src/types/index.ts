@@ -2,6 +2,7 @@ export type Role = 'admin' | 'player'
 
 export type Profile = {
   id: string
+  name: string | null
   username: string | null
   avatar_url: string | null
   team_name: string | null
