@@ -20,7 +20,7 @@ export default function Navbar() {
       style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}
     >
       <Link to="/" className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>
-        FifaCup <span className="text-white">San Tanã</span>
+        FifaCup <span className="text-white">Santana</span>
       </Link>
 
       <div className="flex items-center gap-1">
