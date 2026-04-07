@@ -292,10 +292,10 @@ Admin cria jogador
 - [x] Página de visualização do sorteio
 
 ### Fase 4 — Tabelas e Resultados
-- [ ] Tabela de grupos 1v1 com cálculo de pontos
-- [ ] Tabela de pontos corridos 2v2
-- [ ] Supabase Realtime para atualização ao vivo
-- [ ] Modal de lançamento de resultado (admin)
+- [x] Tabela de grupos 1v1 com cálculo de pontos
+- [x] Tabela de pontos corridos 2v2
+- [x] Supabase Realtime para atualização ao vivo
+- [x] Modal de lançamento de resultado (admin)
 
 ### Fase 5 — Mata-mata
 - [ ] Geração automática do bracket após fase de grupos
