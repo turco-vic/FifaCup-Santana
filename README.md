@@ -313,9 +313,9 @@ Admin cria jogador
 
 ### Fase 5 — Mata-mata
 
-- [ ] Geração automática do bracket após fase de grupos
-- [ ] Componente visual do chaveamento (`KnockoutBracket.tsx`)
-- [ ] Avanço automático de classificados ao inserir resultado
+- [x] Geração automática do bracket após fase de grupos
+- [x] Componente visual do chaveamento (`KnockoutBracket.tsx`)
+- [x] Avanço automático de classificados ao inserir resultado
 
 ### Fase 6 — Polimento e Deploy
 
