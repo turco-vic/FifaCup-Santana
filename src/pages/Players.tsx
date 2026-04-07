@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types'
 
@@ -39,9 +40,10 @@ export default function Players() {
 
                 <div className="flex flex-col gap-3">
                     {players.map(player => (
-                        <div
+                        <Link
                             key={player.id}
-                            className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
+                            to={`/player/${player.id}`}
+                            className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
                         >
                             {/* Avatar */}
                             <div
@@ -74,7 +76,7 @@ export default function Players() {
                                     {player.team_name}
                                 </div>
                             )}
-                        </div>
+                        </Link>
                     ))}
                 </div>
 

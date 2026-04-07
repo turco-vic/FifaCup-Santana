@@ -9,6 +9,7 @@ import Bracket1v1 from './pages/Bracket1v1'
 import League2v2 from './pages/League2v2'
 import Profile from './pages/Profile'
 import Admin from './pages/Admin'
+import PlayerProfile from './pages/PlayerProfile'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
               <Route path="/1v1" element={<Bracket1v1 />} />
               <Route path="/2v2" element={<League2v2 />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/player/:id" element={<PlayerProfile />} />
               <Route path="/draw" element={
                 <ProtectedRoute adminOnly>
                   <Draw />
