@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
+import { useToast } from '../contexts/ToastContext'
 import type { Profile, Match } from '../types'
-import { Users, Trophy, Shuffle, LogOut, ChevronRight, Clock, CheckCircle } from 'lucide-react'
+import { Users, Trophy, Shuffle, LogOut, ChevronRight, Clock, CheckCircle, AlertTriangle } from 'lucide-react'
 
 type DuoWithPlayers = {
     id: string
@@ -14,43 +15,60 @@ type DuoWithPlayers = {
 export default function Admin() {
     const { profile, signOut } = useAuth()
     const navigate = useNavigate()
+    const { showToast } = useToast()
     const [players, setPlayers] = useState<Profile[]>([])
     const [matches, setMatches] = useState<Match[]>([])
     const [duos, setDuos] = useState<DuoWithPlayers[]>([])
     const [loading, setLoading] = useState(true)
+    const [resetting, setResetting] = useState(false)
+    const [showConfirm, setShowConfirm] = useState(false)
 
     useEffect(() => {
-        async function fetchData() {
-            const { data: playersData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('role', 'player')
-                .order('name')
-
-            const { data: matchesData } = await supabase
-                .from('matches')
-                .select('*')
-
-            const { data: duosData } = await supabase
-                .from('duos')
-                .select(`
-          id,
-          player1:player1_id(id, name, username, avatar_url, team_name, role, created_at),
-          player2:player2_id(id, name, username, avatar_url, team_name, role, created_at)
-        `)
-
-            setPlayers(playersData ?? [])
-            setMatches(matchesData ?? [])
-            setDuos((duosData as unknown as DuoWithPlayers[]) ?? [])
-            setLoading(false)
-        }
-
         fetchData()
     }, [])
+
+    async function fetchData() {
+        const { data: playersData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('role', 'player')
+            .order('name')
+
+        const { data: matchesData } = await supabase
+            .from('matches')
+            .select('*')
+
+        const { data: duosData } = await supabase
+            .from('duos')
+            .select(`
+        id,
+        player1:player1_id(id, name, username, avatar_url, team_name, role, created_at),
+        player2:player2_id(id, name, username, avatar_url, team_name, role, created_at)
+      `)
+
+        setPlayers(playersData ?? [])
+        setMatches(matchesData ?? [])
+        setDuos((duosData as unknown as DuoWithPlayers[]) ?? [])
+        setLoading(false)
+    }
 
     async function handleSignOut() {
         await signOut()
         navigate('/login')
+    }
+
+    async function handleReset() {
+        setResetting(true)
+
+        await supabase.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('group_members').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('groups').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        await supabase.from('duos').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+        setShowConfirm(false)
+        setResetting(false)
+        showToast('Campeonato resetado com sucesso!')
+        await fetchData()
     }
 
     if (!profile || profile.role !== 'admin') return null
@@ -73,10 +91,7 @@ export default function Admin() {
     const groupsExist = matches.some(m => m.stage === 'groups')
     const duosExist = duos.length > 0
     const quartersExist = matches.some(m => m.stage === 'quarters')
-
-    const pendingMatchesList = matches
-        .filter(m => !m.played)
-        .slice(0, 5)
+    const pendingMatchesList = matches.filter(m => !m.played).slice(0, 5)
 
     function getPlayerName(id: string) {
         const p = players.find(p => p.id === id)
@@ -146,7 +161,9 @@ export default function Admin() {
                             <Trophy size={16} style={{ color: 'var(--color-gold)' }} />
                             <p className="text-white/40 text-xs uppercase tracking-wider">Partidas</p>
                         </div>
-                        <p className="text-white text-2xl font-bold">{playedMatches}<span className="text-white/30 text-sm font-normal">/{totalMatches}</span></p>
+                        <p className="text-white text-2xl font-bold">
+                            {playedMatches}<span className="text-white/30 text-sm font-normal">/{totalMatches}</span>
+                        </p>
                         <p className="text-white/30 text-xs mt-1">{pendingMatches} pendentes</p>
                     </div>
 
@@ -155,7 +172,9 @@ export default function Admin() {
                             <CheckCircle size={16} style={{ color: 'var(--color-gold)' }} />
                             <p className="text-white/40 text-xs uppercase tracking-wider">1v1</p>
                         </div>
-                        <p className="text-white text-2xl font-bold">{played1v1}<span className="text-white/30 text-sm font-normal">/{matches1v1.length}</span></p>
+                        <p className="text-white text-2xl font-bold">
+                            {played1v1}<span className="text-white/30 text-sm font-normal">/{matches1v1.length}</span>
+                        </p>
                         <p className="text-white/30 text-xs mt-1">partidas jogadas</p>
                     </div>
 
@@ -164,7 +183,9 @@ export default function Admin() {
                             <CheckCircle size={16} style={{ color: 'var(--color-gold)' }} />
                             <p className="text-white/40 text-xs uppercase tracking-wider">2v2</p>
                         </div>
-                        <p className="text-white text-2xl font-bold">{played2v2}<span className="text-white/30 text-sm font-normal">/{matches2v2.length}</span></p>
+                        <p className="text-white text-2xl font-bold">
+                            {played2v2}<span className="text-white/30 text-sm font-normal">/{matches2v2.length}</span>
+                        </p>
                         <p className="text-white/30 text-xs mt-1">partidas jogadas</p>
                     </div>
                 </div>
@@ -259,7 +280,7 @@ export default function Admin() {
                 )}
 
                 {/* Lista de jogadores */}
-                <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden mb-6">
                     <div className="px-4 py-3 border-b border-white/10"
                         style={{ backgroundColor: 'rgba(201,153,42,0.1)' }}>
                         <h2 className="font-bold text-sm" style={{ color: 'var(--color-gold)' }}>
@@ -297,6 +318,49 @@ export default function Admin() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+
+                {/* Zona de Perigo */}
+                <div className="rounded-xl border border-red-500/20 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-red-500/20 flex items-center gap-2"
+                        style={{ backgroundColor: 'rgba(239,68,68,0.05)' }}>
+                        <AlertTriangle size={14} className="text-red-400" />
+                        <h2 className="font-bold text-sm text-red-400">Zona de Perigo</h2>
+                    </div>
+                    <div className="px-4 py-4">
+                        <p className="text-white/40 text-sm mb-4">
+                            Reseta todos os grupos, duplas e partidas. Os jogadores permanecem cadastrados.
+                        </p>
+                        {!showConfirm ? (
+                            <button
+                                onClick={() => setShowConfirm(true)}
+                                className="w-full py-3 rounded-lg font-bold text-red-400 border border-red-500/30 hover:bg-red-500/10 transition"
+                            >
+                                Resetar Campeonato
+                            </button>
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                <p className="text-red-400 text-sm text-center font-bold">
+                                    Tem certeza? Essa ação não pode ser desfeita!
+                                </p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowConfirm(false)}
+                                        className="flex-1 py-3 rounded-lg text-white border border-white/20 hover:bg-white/10 transition font-medium"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleReset}
+                                        disabled={resetting}
+                                        className="flex-1 py-3 rounded-lg font-bold text-white bg-red-500 hover:bg-red-600 transition"
+                                    >
+                                        {resetting ? 'Resetando...' : 'Confirmar'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

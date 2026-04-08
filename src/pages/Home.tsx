@@ -99,7 +99,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-white mb-2">Santana</h2>
           {profile && (
             <p className="text-white/40 text-sm">
-              Olá, {profile.username ?? profile.name?.split(' ')[0]} 👋
+              Olá, {profile.username ?? profile.name?.split(' ')[0]}
             </p>
           )}
         </div>

@@ -1,10 +1,20 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Home, Users, Swords, Handshake, User, Settings } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 export default function BottomNav() {
     const { profile } = useAuth()
     const location = useLocation()
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+
+    useEffect(() => {
+        const handler = () => setIsMobile(window.innerWidth < 640)
+        window.addEventListener('resize', handler)
+        return () => window.removeEventListener('resize', handler)
+    }, [])
+
+    if (!isMobile) return null
 
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
@@ -14,13 +24,13 @@ export default function BottomNav() {
         {
             path: profile?.role === 'admin' ? '/admin' : '/profile',
             label: profile?.role === 'admin' ? 'Admin' : 'Perfil',
-            icon: profile?.role === 'admin' ? Settings : User
+            icon: profile?.role === 'admin' ? Settings : User,
         },
     ]
 
     return (
         <nav
-            className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 border-t border-white/10 sm:hidden"
+            className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 border-t border-white/10"
             style={{ backgroundColor: 'rgba(5,40,30,0.97)', backdropFilter: 'blur(10px)' }}
         >
             {navItems.map(({ path, label, icon: Icon }) => {

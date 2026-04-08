@@ -19,3 +19,9 @@ body {
     padding-bottom: 72px;
   }
 }
+
+@media (min-width: 640px) {
+  .bottom-nav {
+    display: none !important;
+  }
+}
