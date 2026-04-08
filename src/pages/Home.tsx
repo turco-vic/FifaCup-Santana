@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import type { Match, Profile } from '../types'
 import { Swords, Handshake, Trophy, User, Download } from 'lucide-react'
 import { usePWA } from '../hooks/usePWA'
+import { Skeleton, SkeletonCard, SkeletonMatch } from '../components/Skeleton'
 
 type MatchWithNames = Match & {
   home_name: string
@@ -81,8 +82,20 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-white">Carregando...</p>
+      <div className="min-h-screen p-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex flex-col items-center mb-10 gap-3">
+            <Skeleton className="w-20 h-20 rounded-full" />
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+          <div className="flex flex-col gap-2">
+            {[...Array(5)].map((_, i) => <SkeletonMatch key={i} />)}
+          </div>
+        </div>
       </div>
     )
   }
