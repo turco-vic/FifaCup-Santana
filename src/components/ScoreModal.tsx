@@ -10,6 +10,72 @@ type Props = {
     onClose: () => void
 }
 
+async function generateNextRound(match: Match, homeScore: number, awayScore: number) {
+
+    if (match.stage === 'quarters') {
+        // Busca todas as quartas
+        const { data: quarters } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('mode', '1v1')
+            .eq('stage', 'quarters')
+            .order('match_order')
+
+        if (!quarters) return
+
+        // Atualiza o resultado atual na lista local
+        const updated = quarters.map(q =>
+            q.id === match.id
+                ? { ...q, home_score: homeScore, away_score: awayScore, played: true }
+                : q
+        )
+
+        const allPlayed = updated.every(q => q.played)
+        if (!allPlayed) return
+
+        // Gera semifinais: Q1 vs Q2, Q3 vs Q4
+        const winners = updated.map(q =>
+            (q.home_score ?? 0) > (q.away_score ?? 0) ? q.home_id : q.away_id
+        )
+
+        await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'semis')
+        await supabase.from('matches').insert([
+            { mode: '1v1', stage: 'semis', home_id: winners[0], away_id: winners[1], match_order: 0, played: false },
+            { mode: '1v1', stage: 'semis', home_id: winners[2], away_id: winners[3], match_order: 1, played: false },
+        ])
+    }
+
+    if (match.stage === 'semis') {
+        // Busca todas as semis
+        const { data: semis } = await supabase
+            .from('matches')
+            .select('*')
+            .eq('mode', '1v1')
+            .eq('stage', 'semis')
+            .order('match_order')
+
+        if (!semis) return
+
+        const updated = semis.map(s =>
+            s.id === match.id
+                ? { ...s, home_score: homeScore, away_score: awayScore, played: true }
+                : s
+        )
+
+        const allPlayed = updated.every(s => s.played)
+        if (!allPlayed) return
+
+        const winners = updated.map(s =>
+            (s.home_score ?? 0) > (s.away_score ?? 0) ? s.home_id : s.away_id
+        )
+
+        await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'final')
+        await supabase.from('matches').insert([
+            { mode: '1v1', stage: 'final', home_id: winners[0], away_id: winners[1], match_order: 0, played: false },
+        ])
+    }
+}
+
 export default function ScoreModal({ match, homeName, awayName, onClose }: Props) {
     const [homeScore, setHomeScore] = useState(match.home_score?.toString() ?? '')
     const [awayScore, setAwayScore] = useState(match.away_score?.toString() ?? '')
@@ -25,7 +91,13 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
             return
         }
 
+        if (hs === as_) {
+            setError('Empate não permitido no mata-mata. Use pênaltis para desempatar.')
+            return
+        }
+
         setSaving(true)
+
         const { error } = await supabase
             .from('matches')
             .update({ home_score: hs, away_score: as_, played: true })
@@ -37,8 +109,15 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
             return
         }
 
+        // Gera próxima fase automaticamente
+        if (['quarters', 'semis'].includes(match.stage)) {
+            await generateNextRound(match, hs, as_)
+        }
+
         onClose()
     }
+
+    const isKnockout = ['quarters', 'semis', 'final'].includes(match.stage)
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
@@ -46,18 +125,13 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
                 className="w-full max-w-sm rounded-2xl p-6 border border-white/10"
                 style={{ backgroundColor: 'var(--color-green)' }}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-white font-bold text-lg">Lançar Resultado</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-white/40 hover:text-white transition"
-                    >
+                    <button onClick={onClose} className="text-white/40 hover:text-white transition">
                         <X size={20} />
                     </button>
                 </div>
 
-                {/* Times */}
                 <div className="flex flex-col gap-3 mb-6">
                     <div>
                         <p className="text-white/50 text-xs mb-1 truncate">{homeName}</p>
@@ -84,6 +158,12 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
                         />
                     </div>
                 </div>
+
+                {isKnockout && (
+                    <p className="text-white/30 text-xs text-center mb-4">
+                        Empates não são permitidos no mata-mata
+                    </p>
+                )}
 
                 {error && <p className="text-red-400 text-sm text-center mb-4">{error}</p>}
 

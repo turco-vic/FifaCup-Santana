@@ -7,7 +7,7 @@ import GroupTable from '../components/GroupTable'
 import ScoreModal from '../components/ScoreModal'
 import KnockoutBracket from '../components/KnockoutBracket'
 import type { Profile, Match } from '../types'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Trophy } from 'lucide-react'
 
 type GroupData = {
     id: string
@@ -101,6 +101,8 @@ export default function Bracket1v1() {
     const [loading, setLoading] = useState(true)
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
     const [tab, setTab] = useState<'grupos' | 'matamata'>('grupos')
+    const [generatingQuarters, setGeneratingQuarters] = useState(false)
+    const [message, setMessage] = useState('')
 
     useEffect(() => {
         async function fetchGroups() {
@@ -134,6 +136,74 @@ export default function Bracket1v1() {
         fetchGroups()
     }, [])
 
+    function getGroupStandings(group: GroupData) {
+        const groupMatches = matches.filter(
+            m =>
+                m.stage === 'groups' &&
+                group.players.map(p => p.id).includes(m.home_id) &&
+                group.players.map(p => p.id).includes(m.away_id)
+        )
+
+        const standings: Record<string, { id: string; points: number; gd: number; gf: number }> = {}
+        group.players.forEach(p => {
+            standings[p.id] = { id: p.id, points: 0, gd: 0, gf: 0 }
+        })
+
+        groupMatches.filter(m => m.played).forEach(m => {
+            const hs = m.home_score ?? 0
+            const as_ = m.away_score ?? 0
+            standings[m.home_id].gf += hs
+            standings[m.home_id].gd += hs - as_
+            standings[m.away_id].gf += as_
+            standings[m.away_id].gd += as_ - hs
+            if (hs > as_) { standings[m.home_id].points += 3 }
+            else if (as_ > hs) { standings[m.away_id].points += 3 }
+            else { standings[m.home_id].points += 1; standings[m.away_id].points += 1 }
+        })
+
+        return Object.values(standings).sort(
+            (a, b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf
+        )
+    }
+
+    async function handleGenerateQuarters() {
+        setGeneratingQuarters(true)
+        setMessage('')
+
+        // Pega os classificados de cada grupo
+        const groupStandings = groups.map((g, i) => ({
+            groupIndex: i,
+            standings: getGroupStandings(g),
+        }))
+
+        // Cruzamento: 1ºA vs 2ºB, 1ºC vs 2ºD, 1ºB vs 2ºA, 1ºD vs 2ºC
+        const pairs = [
+            [0, 1], // Q1: 1ºA vs 2ºB
+            [2, 3], // Q2: 1ºC vs 2ºD
+            [1, 0], // Q3: 1ºB vs 2ºA
+            [3, 2], // Q4: 1ºD vs 2ºC
+        ]
+
+        const quarterMatches = pairs.map(([gi, gi2], idx) => ({
+            mode: '1v1',
+            stage: 'quarters',
+            home_id: groupStandings[gi].standings[0].id,
+            away_id: groupStandings[gi2].standings[1].id,
+            match_order: idx,
+            played: false,
+        }))
+
+        // Remove quartas anteriores e insere novas
+        await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'quarters')
+        await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'semis')
+        await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'final')
+        await supabase.from('matches').insert(quarterMatches)
+
+        setMessage('Quartas de final geradas!')
+        setGeneratingQuarters(false)
+        setTab('matamata')
+    }
+
     function getPlayerName(id: string) {
         const p = players.find(p => p.id === id)
         return p?.username ?? p?.name ?? 'Desconhecido'
@@ -156,6 +226,9 @@ export default function Bracket1v1() {
     }
 
     const isAdmin = profile?.role === 'admin'
+    const groupMatches = matches.filter(m => m.stage === 'groups')
+    const allGroupsPlayed = groupMatches.length > 0 && groupMatches.every(m => m.played)
+    const quartersExist = matches.some(m => m.stage === 'quarters')
     const knockoutMatches = matches.filter(m => m.stage !== 'groups')
 
     return (
@@ -193,6 +266,23 @@ export default function Bracket1v1() {
                                 onSelectMatch={setSelectedMatch}
                             />
                         ))}
+
+                        {/* Botão gerar quartas */}
+                        {isAdmin && allGroupsPlayed && (
+                            <button
+                                onClick={handleGenerateQuarters}
+                                disabled={generatingQuarters}
+                                className="w-full py-3 rounded-lg font-bold transition flex items-center justify-center gap-2"
+                                style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
+                            >
+                                <Trophy size={16} />
+                                {generatingQuarters ? 'Gerando...' : quartersExist ? 'Regerar Quartas de Final' : 'Gerar Quartas de Final'}
+                            </button>
+                        )}
+
+                        {message && (
+                            <p className="text-green-400 text-sm text-center">{message}</p>
+                        )}
                     </div>
                 )}
 
