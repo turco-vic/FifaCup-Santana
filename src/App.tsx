@@ -13,16 +13,15 @@ import Admin from './pages/Admin'
 import PlayerProfile from './pages/PlayerProfile'
 import NotFound from './pages/NotFound'
 import ResetPassword from './pages/ResetPassword'
+import TopScorers from './pages/TopScorers'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protegidas */}
         <Route path="/*" element={
           <ProtectedRoute>
             <Navbar />
@@ -34,6 +33,7 @@ function App() {
               <Route path="/2v2" element={<League2v2 />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/player/:id" element={<PlayerProfile />} />
+              <Route path="/top-scorers" element={<TopScorers />} />
               <Route path="/draw" element={
                 <ProtectedRoute adminOnly>
                   <Draw />

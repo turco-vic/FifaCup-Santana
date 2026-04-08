@@ -170,18 +170,16 @@ export default function Bracket1v1() {
         setGeneratingQuarters(true)
         setMessage('')
 
-        // Pega os classificados de cada grupo
         const groupStandings = groups.map((g, i) => ({
             groupIndex: i,
             standings: getGroupStandings(g),
         }))
 
-        // Cruzamento: 1ºA vs 2ºB, 1ºC vs 2ºD, 1ºB vs 2ºA, 1ºD vs 2ºC
         const pairs = [
-            [0, 1], // Q1: 1ºA vs 2ºB
-            [2, 3], // Q2: 1ºC vs 2ºD
-            [1, 0], // Q3: 1ºB vs 2ºA
-            [3, 2], // Q4: 1ºD vs 2ºC
+            [0, 1],
+            [2, 3],
+            [1, 0],
+            [3, 2],
         ]
 
         const quarterMatches = pairs.map(([gi, gi2], idx) => ({
@@ -193,7 +191,6 @@ export default function Bracket1v1() {
             played: false,
         }))
 
-        // Remove quartas anteriores e insere novas
         await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'quarters')
         await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'semis')
         await supabase.from('matches').delete().eq('mode', '1v1').eq('stage', 'final')
@@ -207,6 +204,14 @@ export default function Bracket1v1() {
     function getPlayerName(id: string) {
         const p = players.find(p => p.id === id)
         return p?.username ?? p?.name ?? 'Desconhecido'
+    }
+
+    function handleSelectMatch(match: Match) {
+        setSelectedMatch(match)
+    }
+
+    function handleCloseModal() {
+        setSelectedMatch(null)
     }
 
     if (loading || matchesLoading) {
@@ -263,11 +268,10 @@ export default function Bracket1v1() {
                                 group={group}
                                 matches={matches}
                                 isAdmin={isAdmin}
-                                onSelectMatch={setSelectedMatch}
+                                onSelectMatch={handleSelectMatch}
                             />
                         ))}
 
-                        {/* Botão gerar quartas */}
                         {isAdmin && allGroupsPlayed && (
                             <button
                                 onClick={handleGenerateQuarters}
@@ -291,7 +295,9 @@ export default function Bracket1v1() {
                         matches={knockoutMatches}
                         players={players}
                         isAdmin={isAdmin}
-                        onSelectMatch={setSelectedMatch}
+                        onSelectMatch={(match) => {
+                            handleSelectMatch(match)
+                        }}
                     />
                 )}
 
@@ -302,7 +308,7 @@ export default function Bracket1v1() {
                     match={selectedMatch}
                     homeName={getPlayerName(selectedMatch.home_id)}
                     awayName={getPlayerName(selectedMatch.away_id)}
-                    onClose={() => setSelectedMatch(null)}
+                    onClose={handleCloseModal}
                 />
             )}
         </div>

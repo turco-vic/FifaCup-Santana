@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Home, Users, Swords, Handshake, User, Settings } from 'lucide-react'
+import { Home, Users, User, Settings } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function BottomNav() {
@@ -19,8 +19,6 @@ export default function BottomNav() {
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
         { path: '/players', label: 'Jogadores', icon: Users },
-        { path: '/1v1', label: '1v1', icon: Swords },
-        { path: '/2v2', label: '2v2', icon: Handshake },
         {
             path: profile?.role === 'admin' ? '/admin' : '/profile',
             label: profile?.role === 'admin' ? 'Admin' : 'Perfil',
@@ -39,7 +37,7 @@ export default function BottomNav() {
                     <Link
                         key={path}
                         to={path}
-                        className="flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition"
+                        className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition"
                     >
                         <Icon
                             size={22}

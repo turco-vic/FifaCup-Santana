@@ -66,3 +66,11 @@ export type Standing = {
     goal_diff: number
     points: number
 }
+
+export type Goal = {
+    id: string
+    match_id: string
+    player_id: string
+    quantity: number
+    created_at: string
+}

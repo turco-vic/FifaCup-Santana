@@ -80,12 +80,11 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
     const [error, setError] = useState('')
 
     const isKnockout = ['quarters', 'semis', 'final'].includes(match.stage)
+    const is1v1 = match.mode === '1v1'
 
     async function handleSave() {
         const hs = parseInt(homeScore)
         const as_ = parseInt(awayScore)
-
-        console.log('handleSave chamado', hs, as_)
 
         if (isNaN(hs) || isNaN(as_) || hs < 0 || as_ < 0) {
             setError('Placar inválido.')
@@ -104,85 +103,98 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
             .update({ home_score: hs, away_score: as_, played: true })
             .eq('id', match.id)
 
-        console.log('Supabase update result:', error)
-
         if (error) {
             setError('Erro ao salvar.')
             setSaving(false)
             return
         }
 
+        // Registra gols automaticamente para partidas 1v1
+        if (is1v1) {
+            await supabase.from('goals').delete().eq('match_id', match.id)
+
+            const goalsToInsert = []
+            if (hs > 0) goalsToInsert.push({ match_id: match.id, player_id: match.home_id, quantity: hs })
+            if (as_ > 0) goalsToInsert.push({ match_id: match.id, player_id: match.away_id, quantity: as_ })
+
+            if (goalsToInsert.length > 0) {
+                await supabase.from('goals').insert(goalsToInsert)
+            }
+        }
+
         if (['quarters', 'semis'].includes(match.stage)) {
             await generateNextRound(match, hs, as_)
         }
 
-        console.log('Toast chamado!')
         showToast('Resultado salvo com sucesso!')
         onClose()
     }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div
-                className="w-full max-w-sm rounded-2xl p-6 border border-white/10"
+                className="w-full max-w-sm rounded-2xl border border-white/10"
                 style={{ backgroundColor: 'var(--color-green)' }}
             >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between p-6 pb-4">
                     <h2 className="text-white font-bold text-lg">Lançar Resultado</h2>
                     <button onClick={onClose} className="text-white/40 hover:text-white transition">
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="flex flex-col gap-3 mb-6">
-                    <div>
-                        <p className="text-white/50 text-xs mb-1 truncate">{homeName}</p>
-                        <input
-                            type="number"
-                            min="0"
-                            value={homeScore}
-                            onChange={e => setHomeScore(e.target.value)}
-                            className="w-full text-center text-3xl font-bold bg-white/10 text-white rounded-xl py-3 border border-white/20 focus:outline-none focus:border-yellow-500"
-                        />
+                <div className="px-6 pb-6">
+                    <div className="flex flex-col gap-3 mb-6">
+                        <div>
+                            <p className="text-white/50 text-xs mb-1 truncate">{homeName}</p>
+                            <input
+                                type="number"
+                                min="0"
+                                value={homeScore}
+                                onChange={e => setHomeScore(e.target.value)}
+                                className="w-full text-center text-3xl font-bold bg-white/10 text-white rounded-xl py-3 border border-white/20 focus:outline-none focus:border-yellow-500"
+                            />
+                        </div>
+
+                        <div className="text-center text-white/20 text-sm font-bold">×</div>
+
+                        <div>
+                            <p className="text-white/50 text-xs mb-1 truncate">{awayName}</p>
+                            <input
+                                type="number"
+                                min="0"
+                                value={awayScore}
+                                onChange={e => setAwayScore(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSave()}
+                                className="w-full text-center text-3xl font-bold bg-white/10 text-white rounded-xl py-3 border border-white/20 focus:outline-none focus:border-yellow-500"
+                            />
+                        </div>
                     </div>
 
-                    <div className="text-center text-white/20 text-sm font-bold">×</div>
+                    {isKnockout && (
+                        <p className="text-white/30 text-xs text-center mb-4">
+                            Empates não são permitidos no mata-mata
+                        </p>
+                    )}
 
-                    <div>
-                        <p className="text-white/50 text-xs mb-1 truncate">{awayName}</p>
-                        <input
-                            type="number"
-                            min="0"
-                            value={awayScore}
-                            onChange={e => setAwayScore(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSave()}
-                            className="w-full text-center text-3xl font-bold bg-white/10 text-white rounded-xl py-3 border border-white/20 focus:outline-none focus:border-yellow-500"
-                        />
+                    {error && <p className="text-red-400 text-sm text-center mb-4">{error}</p>}
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-3 rounded-xl text-white border border-white/20 hover:bg-white/10 transition font-medium"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex-1 py-3 rounded-xl font-bold transition"
+                            style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
+                        >
+                            {saving ? 'Salvando...' : 'Salvar'}
+                        </button>
                     </div>
-                </div>
-
-                {isKnockout && (
-                    <p className="text-white/30 text-xs text-center mb-4">
-                        Empates não são permitidos no mata-mata
-                    </p>
-                )}
-
-                {error && <p className="text-red-400 text-sm text-center mb-4">{error}</p>}
-
-                <div className="flex gap-3">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-3 rounded-xl text-white border border-white/20 hover:bg-white/10 transition font-medium"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="flex-1 py-3 rounded-xl font-bold transition"
-                        style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
-                    >
-                        {saving ? 'Salvando...' : 'Salvar'}
-                    </button>
                 </div>
             </div>
         </div>
