@@ -14,16 +14,16 @@ export default function Toast({ message, type = 'success', onClose }: Props) {
     }, [onClose])
 
     return (
-        <div className="fixed top-6 right-6 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg"
+        <div className="fixed top-20 right-2 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg"
             style={{
-                backgroundColor: 'var(--color-green)',
-                borderColor: type === 'success' ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)',
+                backgroundColor: 'var(--color-gold)',
+                borderColor: type === 'success' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.3)',
                 minWidth: '260px',
                 maxWidth: '90vw',
             }}
         >
             {type === 'success'
-                ? <CheckCircle size={18} className="text-green-400 flex-shrink-0" />
+                ? <CheckCircle size={18} className="text-white-400 flex-shrink-0" />
                 : <XCircle size={18} className="text-red-400 flex-shrink-0" />
             }
             <p className="text-white text-sm flex-1">{message}</p>
