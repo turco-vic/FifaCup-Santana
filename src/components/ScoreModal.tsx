@@ -98,12 +98,12 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
 
         setSaving(true)
 
-        const { error } = await supabase
+        const { error: matchError } = await supabase
             .from('matches')
             .update({ home_score: hs, away_score: as_, played: true })
             .eq('id', match.id)
 
-        if (error) {
+        if (matchError) {
             setError('Erro ao salvar.')
             setSaving(false)
             return
@@ -122,11 +122,26 @@ export default function ScoreModal({ match, homeName, awayName, onClose }: Props
             }
         }
 
+        // --- DISPARO DA NOTIFICAÇÃO PUSH ---
+        try {
+            await supabase.functions.invoke('send-push-notification', {
+                body: {
+                    title: 'FifaCup: Novo Resultado! ⚽',
+                    body: `${homeName} ${hs} x ${as_} ${awayName}`,
+                    url: '/stats' // Link para onde o usuário vai ao clicar
+                }
+            })
+        } catch (pushErr) {
+            console.error('Erro ao enviar push:', pushErr)
+            // Não bloqueamos o fluxo se o push falhar
+        }
+        // -----------------------------------
+
         if (['quarters', 'semis'].includes(match.stage)) {
             await generateNextRound(match, hs, as_)
         }
 
-        showToast('Resultado salvo com sucesso!')
+        showToast('Resultado salvo e notificações enviadas!')
         onClose()
     }
 
