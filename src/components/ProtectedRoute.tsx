@@ -4,10 +4,10 @@ import { Skeleton } from './Skeleton'
 
 type Props = {
     children: React.ReactNode
-    adminOnly?: boolean
+    supremeOnly?: boolean
 }
 
-export default function ProtectedRoute({ children, adminOnly = false }: Props) {
+export default function ProtectedRoute({ children, supremeOnly = false }: Props) {
     const { profile, loading } = useAuth()
 
     if (loading) {
@@ -30,7 +30,12 @@ export default function ProtectedRoute({ children, adminOnly = false }: Props) {
         return <Navigate to="/login" replace />
     }
 
-    if (adminOnly && profile.role !== 'admin') {
+    // Conta pendente ou bloqueada → login (useAuth já faz signOut, mas por segurança)
+    if (profile.status !== 'active') {
+        return <Navigate to="/login" replace />
+    }
+
+    if (supremeOnly && profile.role !== 'supreme') {
         return <Navigate to="/" replace />
     }
 

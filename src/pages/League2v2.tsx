@@ -64,7 +64,8 @@ export default function League2v2() {
     username: null,
     avatar_url: null,
     team_name: null,
-    role: 'player',
+    role: 'player' as const,
+    status: 'active' as const, // ← adiciona essa linha
     created_at: d.created_at,
   }))
 
@@ -141,7 +142,7 @@ export default function League2v2() {
     )
   }
 
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'supreme'
 
   const championName = hasChampion
     ? finalMatch!.home_score! > finalMatch!.away_score!

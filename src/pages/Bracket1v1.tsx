@@ -274,7 +274,7 @@ export default function Bracket1v1() {
         )
     }
 
-    const isAdmin = profile?.role === 'admin'
+    const isAdmin = profile?.role === 'supreme'
     const groupMatches = matches.filter(m => m.stage === 'groups')
     const allGroupsPlayed = groupMatches.length > 0 && groupMatches.every(m => m.played)
     const quartersExist = matches.some(m => m.stage === 'quarters')

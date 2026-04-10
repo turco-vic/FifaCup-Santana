@@ -1,27 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import type { Profile } from '../types'
 import { Skeleton, SkeletonCard } from '../components/Skeleton'
 
 export default function Players() {
+    const { isSupreme } = useAuth()
     const [players, setPlayers] = useState<Profile[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         async function fetchPlayers() {
-            const { data } = await supabase
+            let query = supabase
                 .from('profiles')
                 .select('*')
-                .eq('role', 'player')
                 .order('name')
 
+            if (!isSupreme) {
+                // Jogadores normais veem só ativos e não-supreme
+                query = query.eq('status', 'active').neq('role', 'supreme')
+            }
+
+            const { data } = await query
             setPlayers(data ?? [])
             setLoading(false)
         }
 
         fetchPlayers()
-    }, [])
+    }, [isSupreme])
 
     if (loading) {
         return (
@@ -41,7 +48,7 @@ export default function Players() {
             <div className="max-w-2xl mx-auto">
 
                 <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-gold)' }}>
-                    Participantes
+                    {isSupreme ? 'Todos os usuários' : 'Participantes'}
                 </h1>
 
                 <div className="flex flex-col gap-3">
@@ -51,7 +58,6 @@ export default function Players() {
                             to={`/player/${player.id}`}
                             className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
                         >
-                            {/* Avatar */}
                             <div
                                 className="w-12 h-12 rounded-full overflow-hidden bg-white/10 border-2 flex-shrink-0"
                                 style={{ borderColor: 'var(--color-gold)' }}
@@ -65,15 +71,26 @@ export default function Players() {
                                 )}
                             </div>
 
-                            {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <p className="text-white font-bold truncate">{player.name ?? 'Sem nome'}</p>
-                                {player.username && (
-                                    <p className="text-white/40 text-sm">@{player.username}</p>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {player.username && (
+                                        <p className="text-white/40 text-sm">@{player.username}</p>
+                                    )}
+                                    {isSupreme && (
+                                        <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${player.status === 'pending' ? 'bg-yellow-400/20 text-yellow-400' :
+                                                player.status === 'blocked' ? 'bg-red-500/20 text-red-400' :
+                                                    player.role === 'supreme' ? 'bg-purple-500/20 text-purple-400' :
+                                                        'bg-green-500/20 text-green-400'
+                                            }`}>
+                                            {player.role === 'supreme' ? 'Supreme' :
+                                                player.status === 'pending' ? 'Pendente' :
+                                                    player.status === 'blocked' ? 'Bloqueado' : 'Ativo'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Time */}
                             {player.team_name && (
                                 <div
                                     className="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0"
@@ -87,7 +104,7 @@ export default function Players() {
                 </div>
 
                 <p className="text-white/30 text-sm text-center mt-6">
-                    {players.length} participante{players.length !== 1 ? 's' : ''} cadastrado{players.length !== 1 ? 's' : ''}
+                    {players.length} usuário{players.length !== 1 ? 's' : ''}
                 </p>
 
             </div>

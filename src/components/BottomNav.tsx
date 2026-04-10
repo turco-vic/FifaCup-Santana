@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Home, Users, User, Settings } from 'lucide-react'
+import { Home, Users, User, Shield } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function BottomNav() {
-    const { profile } = useAuth()
+    const { isSupreme } = useAuth()
     const location = useLocation()
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
 
@@ -16,15 +16,16 @@ export default function BottomNav() {
 
     if (!isMobile) return null
 
-    const navItems = [
-        { path: '/', label: 'Home', icon: Home },
-        { path: '/players', label: 'Jogadores', icon: Users },
-        {
-            path: profile?.role === 'admin' ? '/admin' : '/profile',
-            label: profile?.role === 'admin' ? 'Admin' : 'Perfil',
-            icon: profile?.role === 'admin' ? Settings : User,
-        },
-    ]
+    const navItems = isSupreme
+        ? [
+            { path: '/', label: 'Home', icon: Home },
+            { path: '/players', label: 'Usuários', icon: Users },
+            { path: '/admin', label: 'Supreme', icon: Shield },
+        ]
+        : [
+            { path: '/', label: 'Home', icon: Home },
+            { path: '/profile', label: 'Perfil', icon: User },
+        ]
 
     return (
         <nav

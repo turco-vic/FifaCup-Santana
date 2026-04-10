@@ -4,8 +4,9 @@ import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../contexts/ToastContext'
 import type { Profile, Match } from '../types'
-import { Users, Trophy, Shuffle, LogOut, ChevronRight, Clock, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Users, Trophy, Shuffle, LogOut, ChevronRight, Clock, CheckCircle, AlertTriangle, Pencil } from 'lucide-react'
 import { Skeleton, SkeletonCard } from '../components/Skeleton'
+import EditPlayerModal from '../components/EditPlayerModal'
 
 type DuoWithPlayers = {
     id: string
@@ -23,6 +24,7 @@ export default function Admin() {
     const [loading, setLoading] = useState(true)
     const [resetting, setResetting] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
+    const [editingPlayer, setEditingPlayer] = useState<Profile | null>(null)
 
     useEffect(() => {
         async function fetchData() {
@@ -72,7 +74,11 @@ export default function Admin() {
         window.location.reload()
     }
 
-    if (!profile || profile.role !== 'admin') return null
+    function handlePlayerSaved(updated: Profile) {
+        setPlayers(prev => prev.map(p => p.id === updated.id ? updated : p))
+    }
+
+    if (!profile || profile.role !== 'supreme') return null
 
     if (loading) {
         return (
@@ -302,7 +308,7 @@ export default function Admin() {
                     </div>
                 )}
 
-                {/* Lista de jogadores */}
+                {/* Lista de jogadores — com edição */}
                 <div className="rounded-xl bg-white/5 border border-white/10 overflow-hidden mb-6">
                     <div className="px-4 py-3 border-b border-white/10"
                         style={{ backgroundColor: 'rgba(201,153,42,0.1)' }}>
@@ -339,6 +345,12 @@ export default function Admin() {
                                         )}
                                     </div>
                                 </div>
+                                <button
+                                    onClick={() => setEditingPlayer(player)}
+                                    className="p-1.5 rounded border border-white/20 text-white/40 hover:text-white hover:border-white/40 transition flex-shrink-0"
+                                >
+                                    <Pencil size={13} />
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -414,6 +426,15 @@ export default function Admin() {
                 </div>
 
             </div>
+
+            {/* Modal de edição */}
+            {editingPlayer && (
+                <EditPlayerModal
+                    player={editingPlayer}
+                    onClose={() => setEditingPlayer(null)}
+                    onSaved={handlePlayerSaved}
+                />
+            )}
         </div>
     )
 }

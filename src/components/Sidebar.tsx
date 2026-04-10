@@ -2,21 +2,26 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { FaInstagram, FaLinkedin } from 'react-icons/fa'
-import { Swords, Handshake, Trophy, Shuffle, X, Menu, Users, BarChart2 } from 'lucide-react'
+import { X, Menu, Users, Shield, Home, User } from 'lucide-react'
 
 export default function Sidebar() {
-    const { profile } = useAuth()
+    const { profile, isSupreme } = useAuth()
     const location = useLocation()
     const [open, setOpen] = useState(false)
 
-    const items = [
-        { path: '/players', label: 'Jogadores', icon: Users },
-        { path: '/top-scorers', label: 'Top Scorers', icon: Trophy },
-        { path: '/stats', label: 'Estatísticas', icon: BarChart2 },
-        ...(profile?.role === 'admin' ? [{ path: '/draw', label: 'Sorteio', icon: Shuffle }] : []),
-        { path: '/1v1', label: '1v1 — Fase de Grupos', icon: Swords },
-        { path: '/2v2', label: '2v2 — Pontos Corridos', icon: Handshake },
-    ]
+    // Supreme: vê lista global de usuários + painel supreme
+    // Player/Admin: vê home, perfil — jogadores é por campeonato
+    const items = isSupreme
+        ? [
+            { path: '/', label: 'Home', icon: Home },
+            { path: '/players', label: 'Todos os usuários', icon: Users },
+            { path: '/admin', label: 'Painel Supreme', icon: Shield },
+            { path: '/profile', label: 'Meu Perfil', icon: User },
+        ]
+        : [
+            { path: '/', label: 'Home', icon: Home },
+            { path: '/profile', label: 'Meu Perfil', icon: User },
+        ]
 
     return (
         <>
@@ -52,6 +57,34 @@ export default function Sidebar() {
                         <X size={20} />
                     </button>
                 </div>
+
+                {/* Info do usuário */}
+                {profile && (
+                    <div className="px-5 py-4 border-b border-white/10">
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="w-10 h-10 rounded-full overflow-hidden bg-white/10 flex-shrink-0 flex items-center justify-center border"
+                                style={{ borderColor: 'var(--color-gold)' }}
+                            >
+                                {profile.avatar_url
+                                    ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                                    : <span className="text-white/40 text-sm font-bold">{profile.name?.charAt(0) ?? '?'}</span>
+                                }
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-white text-sm font-bold truncate">
+                                    {isSupreme ? 'AdminSupremo' : profile.name ?? 'Sem nome'}
+                                </p>
+                                {profile.username && !isSupreme && (
+                                    <p className="text-white/40 text-xs">@{profile.username}</p>
+                                )}
+                                {isSupreme && (
+                                    <p className="text-xs" style={{ color: 'var(--color-gold)' }}>Turco</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex flex-col p-4 gap-1 flex-1">
                     {items.map(({ path, label, icon: Icon }) => (
@@ -101,7 +134,6 @@ export default function Sidebar() {
                         </a>
                     </div>
                 </div>
-
             </div>
         </>
     )

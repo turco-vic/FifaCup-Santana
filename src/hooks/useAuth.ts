@@ -39,7 +39,49 @@ export function useAuth() {
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) return { error }
+
+    // Bloquear login se conta ainda pendente
+    if (data.user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileData?.status === 'pending') {
+        await supabase.auth.signOut()
+        return {
+          error: {
+            message: 'Sua conta ainda não foi aprovada. Aguarde o AdminSupremo.',
+          },
+        }
+      }
+
+      if (profileData?.status === 'blocked') {
+        await supabase.auth.signOut()
+        return {
+          error: {
+            message: 'Sua conta foi bloqueada. Entre em contato com o administrador.',
+          },
+        }
+      }
+    }
+
+    return { error: null }
+  }
+
+  async function signUp(email: string, password: string, name: string) {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
+      },
+    })
+
     return { error }
   }
 
@@ -47,5 +89,19 @@ export function useAuth() {
     await supabase.auth.signOut()
   }
 
-  return { profile, loading, signIn, signOut }
+  // Helpers de role/status
+  const isSupreme = profile?.role === 'supreme'
+  const isActive = profile?.status === 'active'
+  const isPending = profile?.status === 'pending'
+
+  return {
+    profile,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    isSupreme,
+    isActive,
+    isPending,
+  }
 }

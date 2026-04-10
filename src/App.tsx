@@ -3,24 +3,30 @@ import Navbar from './components/NavBar'
 import BottomNav from './components/BottomNav'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
+import Register from './pages/Register'
 import Home from './pages/Home'
 import Players from './pages/Players'
 import Draw from './pages/Draw'
 import Bracket1v1 from './pages/Bracket1v1'
 import League2v2 from './pages/League2v2'
 import Profile from './pages/Profile'
-import Admin from './pages/Admin'
 import PlayerProfile from './pages/PlayerProfile'
 import NotFound from './pages/NotFound'
 import ResetPassword from './pages/ResetPassword'
 import TopScorers from './pages/TopScorers'
 import Stats from './pages/Stats'
+import Supreme from './pages/Supreme'
+import CreateTournament from './pages/CreateTournament'
+import JoinTournament from './pages/JoinTournament'
+import TournamentDashboard from './pages/TournamentDashboard'
+import TournamentManage from './pages/TournamentManage'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="/*" element={
@@ -35,18 +41,23 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/player/:id" element={<PlayerProfile />} />
               <Route path="/top-scorers" element={<TopScorers />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/tournaments/new" element={<CreateTournament />} />
+              <Route path="/tournaments/join" element={<JoinTournament />} />
+              <Route path="/tournament/:id" element={<TournamentDashboard />} />
+              <Route path="/tournament/:id/manage" element={<TournamentManage />} />
+
               <Route path="/draw" element={
-                <ProtectedRoute adminOnly>
+                <ProtectedRoute supremeOnly>
                   <Draw />
                 </ProtectedRoute>
               } />
               <Route path="/admin" element={
-                <ProtectedRoute adminOnly>
-                  <Admin />
+                <ProtectedRoute supremeOnly>
+                  <Supreme />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
-              <Route path="/stats" element={<Stats />} />
             </Routes>
           </ProtectedRoute>
         } />

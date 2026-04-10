@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff } from 'lucide-react'
@@ -16,9 +16,11 @@ export default function Login() {
     const [resetSent, setResetSent] = useState(false)
     const [showReset, setShowReset] = useState(false)
 
-    if (!loading && profile) {
-        navigate('/', { replace: true })
-    }
+    useEffect(() => {
+        if (!loading && profile) {
+            navigate('/', { replace: true })
+        }
+    }, [loading, profile])
 
     async function handleResetPassword() {
         if (!resetEmail) return
@@ -33,7 +35,7 @@ export default function Login() {
         setSubmitting(true)
         const { error } = await signIn(email, password)
         if (error) {
-            setError('Email ou senha incorretos.')
+            setError(error.message ?? 'Email ou senha incorretos.')
             setSubmitting(false)
             return
         }
@@ -79,16 +81,30 @@ export default function Login() {
                         </button>
                     </div>
 
-                    {error && <p className="text-red-400 text-sm">{error}</p>}
+                    {error && (
+                        <p className="text-red-400 text-sm text-center leading-snug">{error}</p>
+                    )}
 
                     <button
                         onClick={handleLogin}
                         disabled={submitting}
-                        className="w-full py-3 rounded-lg font-bold text-white transition hover:opacity-90"
+                        className="w-full py-3 rounded-lg font-bold transition hover:opacity-90"
                         style={{ backgroundColor: 'var(--color-gold)', color: 'var(--color-green)' }}
                     >
                         {submitting ? 'Entrando...' : 'Entrar'}
                     </button>
+
+                    {/* Link para cadastro */}
+                    <p className="text-white/40 text-xs text-center">
+                        Não tem conta?{' '}
+                        <Link
+                            to="/register"
+                            className="font-bold hover:text-white transition"
+                            style={{ color: 'var(--color-gold)' }}
+                        >
+                            Criar conta
+                        </Link>
+                    </p>
 
                     {!showReset ? (
                         <button

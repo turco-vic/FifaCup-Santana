@@ -50,7 +50,7 @@ export function useStandings(players: Profile[], matches: Match[]): Standing[] {
         })
 
     // Calcula saldo e ordena
-    return Object.values(standings)
+    return Object.values(standings) 
         .map(s => ({ ...s, goal_diff: s.goals_for - s.goals_against }))
         .sort((a, b) =>
             b.points - a.points ||

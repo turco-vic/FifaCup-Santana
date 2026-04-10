@@ -178,7 +178,7 @@ export default function Draw() {
     )
   }
 
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'supreme'
 
   return (
     <div className="min-h-screen p-6">
